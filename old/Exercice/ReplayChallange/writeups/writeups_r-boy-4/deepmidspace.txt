@@ -1,0 +1,3 @@
+In the HTML source, a midi file could be found.
+By completely randomly guessing long enough, I found out that the message was hidden using the stegano_midi tool.
+Applying this tool yielded another MIDI file, applying it again resulted in the flag.

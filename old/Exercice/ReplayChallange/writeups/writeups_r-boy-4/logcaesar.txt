@@ -1,0 +1,8 @@
+Decrypt using:
+
+plaintext=bytearray(256)
+for i in range(0,256):
+        new_pos = (3**(key+i)) % 257
+        plaintext[i] = ciphertext[new_pos-1]^i^(new_pos-1)
+
+Test all 256 keys, and search for the flag format in the resulting plaintexts.

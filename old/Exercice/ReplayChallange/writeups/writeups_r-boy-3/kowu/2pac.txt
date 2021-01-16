@@ -1,0 +1,6 @@
+Starting the 32bit binary with radare2 in debug mode `r2 -d 2pac`
+As there are no symbols, we are stuck inside ld.so. Continue with `dsui jmp edi`, after the jump we should be at the entry point.
+Notice some ptrace antidebugging (syscall id 0x1a, see syscall_32.tbl), when we are at the cmp eax, -1 set eax = 0 with `dr eax=0`
+We are now inside a simple xor decoding routine. Place a breakpoint afterwards and continue with `dc`. We can see the decoded content near edi, it's the fake flag.
+Continue single stepping until we are in another xor decoding routine, again placing a breakpoint afterwards and continue.
+Decoded Flag is at edi, we can print it with `psz @edi`. Done.

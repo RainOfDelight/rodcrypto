@@ -1,0 +1,15 @@
+The goal in the challenge is to win tic tac toe against a ideal? playing algorithm.
+We get the flag if we are on top of the scoreboard.
+There is a pwd required, we find it out by placing a breakpoint at the strcmp. (It's _sunfloweroil_)
+There is a formatstring vuln in the username.
+As the server is forking, we don't have ASLR.
+Therefore I did a two step approach.
+
+Step 1: Leak a stack address at known offset
+r.sendline('%21$pAAABBBBBBBB')
+Step 2: Overwrite the score of the top player with 1
+r.sendline('A%8$hhnA' + p64(0x7ffcd30847f0 + 0x14))
+
+To trigger, we need to win 2 rounds against a bad playing algo (which is easily possible) and view the scoreboard afterwards.
+
+Finding the correct interstack offset for step 2 was a bit strange and took me some time, during debugging the offset was a different one than in a normal run. I still don't know why and how this happens (and i can't even debug it). In the end I just solved it by some (really short) trial and error against the remote server.

@@ -1,0 +1,14 @@
+By the amount of "IHDR" contained in the file, it is pretty obvious that it is a PNG file.
+Restoring the first four bytes to the correct PNG header an image was revealed, containing a photo from mars.
+On closer examination, I started to become mistrustful: was the photo digitally manipulated after the mars rover took it?
+It turned out, that there were people in it!
+More relevantly, there was a password written in the surface of our little red neighbour.
+
+Using binwalk, I extracted a zip file from the original file, the contents of which could be extracted using the very same password I extracted from the surface of mars.
+This revealed to me a Microsoft Word .doc-file; but it was no mere ordinary Microsoft Word .doc-file, for it contained the dread of the IT-Security-Community that is called "Active Contents", or "Macros".
+Closely examining the contained macro revealed to my trained, but tired, eyes that it was a specimen of the common XOR-encryption using a repeating key, the choice of which was left to the user, in contrast to the ciphertext which was ingrained into the very source code of the algorithm at hand.
+A suspicion started to grow in me: Maybe the corresponding plaintext was the flag, which I had sought after ever since that very first second of examining the puzzle, blissfully ignorant of the horrors to come in the form of Microsoft Office macros and very bad cryptography.
+I decided to use that suspicion to my advantage and brutally XOR the very first bytes of the ciphertext with the beginning of the (quite... special) flag format "{FLG:".
+The result was conclusive: It was "Oppor" or "Curio" or some other beginning of a name of a mars rover, the exact identity of which I have forgotten in the long hours since solving this challenge and am now too lazy to re-retrieve.
+It seemed only natural that the rest of the key would follow suit, so I plugged in the whole name of said unknown mars rover, and - oh joy - my eyes met the beauty of the flag I so desired.
+At last, I was at peace.

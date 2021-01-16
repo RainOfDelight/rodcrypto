@@ -1,0 +1,3 @@
+The pairs of files with similar filenames "xxx.txt" and "xxx (1).txt" had the same content-length and similar content, but with some characters difference.
+Taking just the changed characters from the "(1)"-file resulted in another text, similar to another file in the folder.
+Repeating this process resulted in "Try again!" for three of the pairs, and in the flag for the remaining one.

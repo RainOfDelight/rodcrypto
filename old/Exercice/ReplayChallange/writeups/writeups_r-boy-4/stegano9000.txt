@@ -1,0 +1,12 @@
+In the HTML, there was a commented out form, containing a "captcha".
+Analyzing the dynamically generated image using the guess^d^d^d^d^d stegano tool "stegsolve", I noticed an equation written out using the lowest bit of the green channel.
+Also, there was a suspicious straight line of pixels.
+I concluded that the equation determines that line, analyzing the line of pixels resulted in an ASCII-string encoded in the color values.
+Submitting this ASCII-string let me pass into the next stage.
+
+I however noticed that none of this was actually neccesary, as the solution to the captcha was also contained in a JWT in the cookie, which is precisely where the solution of a captcha shouldn't be.
+Maybe that was the point. Maybe not.
+
+After passing all the stages I landed on a page containing an embedded rickroll, and some javascript-obfuscated links to other rickroll or gandalf-headnod videos.
+I spent some time trying to find the flag in there.
+However, this turned out to be a colossal waste of my time that added absolutely nothing to the challenge - when I copied the cookie obtained by my python script into my actual browser, I just got randomly redirected to the flag page in a matter that didn't seem consistent.

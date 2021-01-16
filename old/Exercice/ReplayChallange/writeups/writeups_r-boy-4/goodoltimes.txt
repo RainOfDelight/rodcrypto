@@ -1,0 +1,2 @@
+The cipher was a simple Vigenere cipher.
+The key could be determined by the standard Vigenere attack - first determining the probable keylength 9 using autocorrelation; then using simple frequency analysis on each of the 9 parts.
